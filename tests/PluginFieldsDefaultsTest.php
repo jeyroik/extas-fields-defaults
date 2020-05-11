@@ -72,4 +72,32 @@ class PluginFieldsDefaultsTest extends TestCase
 
         $this->assertEquals('is ok', $test['test']);
     }
+
+    public function testCallableValue()
+    {
+        $this->fieldRepo->create(new Field([
+            Field::FIELD__NAME => 'test',
+            Field::FIELD__VALUE => ExternalValue::class,
+            Field::FIELD__PARAMETERS => [
+                'subject' => [
+                    ISampleParameter::FIELD__NAME => 'subject',
+                    ISampleParameter::FIELD__VALUE => 'test'
+                ]
+            ]
+        ]));
+        $this->pluginRepo->create(new Plugin([
+            Plugin::FIELD__CLASS => PluginFieldsDefaults::class,
+            Plugin::FIELD__STAGE => 'test.init'
+        ]));
+        $this->createRepoExt(['fieldRepository']);
+
+        $test = new class extends Item {
+            protected function getSubjectForExtension(): string
+            {
+                return 'test';
+            }
+        };
+
+        $this->assertEquals('is ok', $test['test']);
+    }
 }
