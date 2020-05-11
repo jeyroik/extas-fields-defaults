@@ -155,7 +155,7 @@ class PluginFieldsDefaultsTest extends TestCase
             Condition::FIELD__ALIASES => ['like', '~'],
             Condition::FIELD__CLASS => ConditionLike::class
         ]));
-        $this->createRepoExt(['fieldRepository']);
+        $this->createRepoExt(['fieldRepository', 'parserRepository', 'conditionRepository']);
 
         $test = new class extends Item {
             protected function getSubjectForExtension(): string
