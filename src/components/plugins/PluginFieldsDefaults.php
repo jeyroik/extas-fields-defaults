@@ -30,20 +30,23 @@ class PluginFieldsDefaults extends Plugin implements IStageItemInit
 
         foreach ($fields as $field) {
             if (!$item->has($field->getName())) {
-                $item[$field->getName()] = $this->getValue($field);
+                $item[$field->getName()] = $this->getValue($field, $item);
             }
         }
     }
 
     /**
      * @param IField $field
+     * @param IItem $item
      * @return mixed
      */
-    protected function getValue(IField $field)
+    protected function getValue(IField $field, IItem $item)
     {
         $value = $field->getValue();
-        if (is_callable($value)) {
-            return $value();
+
+        if (is_string($value) && class_exists($value)) {
+            $class = new $value();
+            return $class($field, $item);
         }
 
         return $value;
