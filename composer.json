@@ -2,13 +2,15 @@
   "name": "jeyroik/extas-fields-defaults",
   "description": "Default fields values for Extas",
   "require": {
-    "jeyroik/extas-fields": "0.*"
+    "jeyroik/extas-fields": "0.*",
+    "jeyroik/extas-parsers": "0.*"
   },
   "require-dev": {
     "phpunit/phpunit": "^9",
     "vlucas/phpdotenv": "^3.4",
     "jeyroik/extas-repositories-mongo": "1.*",
-    "jeyroik/extas-snuffbox": "0.*"
+    "jeyroik/extas-snuffbox": "0.*",
+    "jeyroik/extas-conditions": "0.*"
   },
   "autoload": {
     "psr-4": {

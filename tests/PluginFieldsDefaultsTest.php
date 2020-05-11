@@ -2,13 +2,21 @@
 namespace tests;
 
 use Dotenv\Dotenv;
+use extas\components\conditions\Condition;
+use extas\components\conditions\ConditionLike;
+use extas\components\conditions\ConditionRepository;
 use extas\components\extensions\TSnuffExtensions;
 use extas\components\fields\Field;
 use extas\components\fields\FieldRepository;
 use extas\components\Item;
+use extas\components\parsers\Parser;
+use extas\components\parsers\ParserOneOf;
+use extas\components\parsers\ParserRepository;
 use extas\components\plugins\Plugin;
 use extas\components\plugins\PluginFieldsDefaults;
 use extas\components\plugins\PluginRepository;
+use extas\interfaces\conditions\ICondition;
+use extas\interfaces\conditions\IConditionRepository;
 use extas\interfaces\repositories\IRepository;
 use extas\interfaces\samples\parameters\ISampleParameter;
 use PHPUnit\Framework\TestCase;
@@ -25,6 +33,8 @@ class PluginFieldsDefaultsTest extends TestCase
 
     protected IRepository $fieldRepo;
     protected IRepository $pluginRepo;
+    protected IRepository $parserRepo;
+    protected IRepository $condRepo;
 
     protected function setUp(): void
     {
@@ -33,8 +43,13 @@ class PluginFieldsDefaultsTest extends TestCase
         $env->load();
         $this->fieldRepo = new FieldRepository();
         $this->pluginRepo = new PluginRepository();
+        $this->parserRepo = new ParserRepository();
+        $this->condRepo = new ConditionRepository();
         $this->addReposForExt([
-            'fieldRepository' => FieldRepository::class
+            'fieldRepository' => FieldRepository::class,
+            'parserRepository' => ParserRepository::class,
+            'conditionRepository' => ConditionRepository::class,
+            IConditionRepository::class => ConditionRepository::class
         ]);
     }
 
@@ -43,6 +58,8 @@ class PluginFieldsDefaultsTest extends TestCase
         $this->deleteSnuffExtensions();
         $this->fieldRepo->delete([Field::FIELD__NAME => 'test']);
         $this->pluginRepo->delete([Plugin::FIELD__CLASS => PluginFieldsDefaults::class]);
+        $this->parserRepo->delete([Parser::FIELD__NAME => 'test']);
+        $this->condRepo->delete([ICondition::FIELD__NAME => 'like']);
     }
 
     public function testDefaults()
@@ -61,7 +78,7 @@ class PluginFieldsDefaultsTest extends TestCase
             Plugin::FIELD__CLASS => PluginFieldsDefaults::class,
             Plugin::FIELD__STAGE => 'test.init'
         ]));
-        $this->createRepoExt(['fieldRepository']);
+        $this->createRepoExt(['fieldRepository', 'parserRepository']);
 
         $test = new class extends Item {
             protected function getSubjectForExtension(): string
@@ -89,7 +106,7 @@ class PluginFieldsDefaultsTest extends TestCase
             Plugin::FIELD__CLASS => PluginFieldsDefaults::class,
             Plugin::FIELD__STAGE => 'test.init'
         ]));
-        $this->createRepoExt(['fieldRepository']);
+        $this->createRepoExt(['fieldRepository', 'parserRepository']);
 
         $test = new class extends Item {
             protected function getSubjectForExtension(): string
@@ -99,5 +116,54 @@ class PluginFieldsDefaultsTest extends TestCase
         };
 
         $this->assertEquals('is ok', $test['test']);
+    }
+
+    public function testParserUsing()
+    {
+        $this->fieldRepo->create(new Field([
+            Field::FIELD__NAME => 'test',
+            Field::FIELD__VALUE => '@oneof(is ok,is well)',
+            Field::FIELD__PARAMETERS => [
+                'subject' => [
+                    ISampleParameter::FIELD__NAME => 'subject',
+                    ISampleParameter::FIELD__VALUE => 'test'
+                ]
+            ]
+        ]));
+        $this->pluginRepo->create(new Plugin([
+            Plugin::FIELD__CLASS => PluginFieldsDefaults::class,
+            Plugin::FIELD__STAGE => 'test.init'
+        ]));
+        $this->parserRepo->create(new Parser([
+            Parser::FIELD__NAME => 'test',
+            Parser::FIELD__CLASS => ParserOneOf::class,
+            Parser::FIELD__VALUE => 'oneof',
+            Parser::FIELD__CONDITION => '~',
+            Parser::FIELD__PARAMETERS => [
+                'pattern' => [
+                    ISampleParameter::FIELD__NAME => 'pattern',
+                    ISampleParameter::FIELD__VALUE => '/\@oneof\((.*)\)/'
+                ],
+                'delimiter' => [
+                    ISampleParameter::FIELD__NAME => 'delimiter',
+                    ISampleParameter::FIELD__VALUE => ','
+                ]
+            ]
+        ]));
+        $this->condRepo->create(new Condition([
+            Condition::FIELD__NAME => 'like',
+            Condition::FIELD__ALIASES => ['like', '~'],
+            Condition::FIELD__CLASS => ConditionLike::class
+        ]));
+        $this->createRepoExt(['fieldRepository', 'parserRepository', 'conditionRepository']);
+
+        $test = new class extends Item {
+            protected function getSubjectForExtension(): string
+            {
+                return 'test';
+            }
+        };
+
+        $this->assertTrue(in_array($test['test'], ['is ok', 'is well']));
     }
 }

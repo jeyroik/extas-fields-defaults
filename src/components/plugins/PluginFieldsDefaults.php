@@ -3,12 +3,14 @@ namespace extas\components\plugins;
 
 use extas\interfaces\fields\IField;
 use extas\interfaces\IItem;
+use extas\interfaces\parsers\IParser;
 use extas\interfaces\stages\IStageItemInit;
 
 /**
  * Class PluginFieldsDefaults
  *
  * @method fieldRepository()
+ * @method parserRepository()
  *
  * @package extas\components\plugins
  * @author jeyroik@gmail.com
@@ -47,6 +49,14 @@ class PluginFieldsDefaults extends Plugin implements IStageItemInit
         if (is_string($value) && class_exists($value)) {
             $class = new $value();
             return $class($field, $item);
+        } else {
+            /**
+             * @var IParser[] $parsers
+             */
+            $parsers = $this->parserRepository()->all([]);
+            foreach ($parsers as $parser) {
+                $value = $parser->parse($value);
+            }
         }
 
         return $value;
