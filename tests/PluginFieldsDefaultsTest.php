@@ -78,7 +78,7 @@ class PluginFieldsDefaultsTest extends TestCase
             Plugin::FIELD__CLASS => PluginFieldsDefaults::class,
             Plugin::FIELD__STAGE => 'test.init'
         ]));
-        $this->createRepoExt(['fieldRepository']);
+        $this->createRepoExt(['fieldRepository', 'parserRepository']);
 
         $test = new class extends Item {
             protected function getSubjectForExtension(): string
@@ -106,7 +106,7 @@ class PluginFieldsDefaultsTest extends TestCase
             Plugin::FIELD__CLASS => PluginFieldsDefaults::class,
             Plugin::FIELD__STAGE => 'test.init'
         ]));
-        $this->createRepoExt(['fieldRepository']);
+        $this->createRepoExt(['fieldRepository', 'parserRepository']);
 
         $test = new class extends Item {
             protected function getSubjectForExtension(): string

@@ -53,7 +53,7 @@ class PluginFieldsDefaults extends Plugin implements IStageItemInit
             /**
              * @var IParser[] $parsers
              */
-            $parsers = $this->parserRepository()->all();
+            $parsers = $this->parserRepository()->all([]);
             foreach ($parsers as $parser) {
                 $value = $parser->parse($value);
             }
