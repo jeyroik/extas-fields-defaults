@@ -48,7 +48,9 @@ class PluginFieldsDefaults extends Plugin implements IStageItemInit
 
         if (is_string($value) && class_exists($value)) {
             $class = new $value();
-            return $class($field, $item);
+            return method_exists($class, '__invoke')
+                ? $class($field, $item)
+                : $value;
         } else {
             /**
              * @var IParser[] $parsers
