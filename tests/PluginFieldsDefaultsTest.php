@@ -55,11 +55,11 @@ class PluginFieldsDefaultsTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->deleteSnuffExtensions();
         $this->fieldRepo->delete([Field::FIELD__NAME => 'test']);
         $this->pluginRepo->delete([Plugin::FIELD__CLASS => PluginFieldsDefaults::class]);
         $this->parserRepo->delete([Parser::FIELD__NAME => 'test']);
         $this->condRepo->delete([ICondition::FIELD__NAME => 'like']);
+        $this->deleteSnuffExtensions();
     }
 
     public function testDefaults()
@@ -106,7 +106,6 @@ class PluginFieldsDefaultsTest extends TestCase
             Plugin::FIELD__CLASS => PluginFieldsDefaults::class,
             Plugin::FIELD__STAGE => 'test.init'
         ]));
-        $this->createRepoExt(['fieldRepository', 'parserRepository']);
 
         $test = new class extends Item {
             protected function getSubjectForExtension(): string
@@ -155,7 +154,6 @@ class PluginFieldsDefaultsTest extends TestCase
             Condition::FIELD__ALIASES => ['like', '~'],
             Condition::FIELD__CLASS => ConditionLike::class
         ]));
-        $this->createRepoExt(['fieldRepository', 'parserRepository', 'conditionRepository']);
 
         $test = new class extends Item {
             protected function getSubjectForExtension(): string
@@ -165,5 +163,32 @@ class PluginFieldsDefaultsTest extends TestCase
         };
 
         $this->assertTrue(in_array($test['test'], ['is ok', 'is well']));
+    }
+
+    public function testClassNameIsReturning()
+    {
+        $this->fieldRepo->create(new Field([
+            Field::FIELD__NAME => 'test',
+            Field::FIELD__VALUE => 'extas\\components\\plugins\\Plugin',
+            Field::FIELD__PARAMETERS => [
+                'subject' => [
+                    ISampleParameter::FIELD__NAME => 'subject',
+                    ISampleParameter::FIELD__VALUE => 'test'
+                ]
+            ]
+        ]));
+        $this->pluginRepo->create(new Plugin([
+            Plugin::FIELD__CLASS => PluginFieldsDefaults::class,
+            Plugin::FIELD__STAGE => 'test.init'
+        ]));
+
+        $test = new class extends Item {
+            protected function getSubjectForExtension(): string
+            {
+                return 'test';
+            }
+        };
+
+        $this->assertEquals(Plugin::class, $test['test']);
     }
 }
